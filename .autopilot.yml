@@ -1,0 +1,5 @@
+language: python
+style: OOP
+domain: ai-clone
+target_branch: main
+test_framework: pytest
