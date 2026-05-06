@@ -1,0 +1,11 @@
+openrouter_api_key: ""
+elevenlabs_api_key: ""
+together_api_key: ""
+db_path: "./data/memory.db"
+chroma_path: "./data/chroma"
+profile_path: "./data/profile.json"
+fine_tuned_model_id: ""
+user_name: ""
+elevenlabs_voice_id: ""
+whisper_model: "base"
+vad_aggressiveness: 2
