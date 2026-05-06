@@ -12,6 +12,7 @@ def test_parsed_message_stores_fields():
     assert msg.sender == "Vishwa"
     assert msg.text == "Hello there"
     assert msg.platform == Platform.WHATSAPP
+    assert msg.timestamp == datetime(2023, 5, 23, 14, 32, 10)
 
 
 def test_platform_values():
