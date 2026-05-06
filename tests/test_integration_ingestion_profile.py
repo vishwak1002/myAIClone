@@ -41,7 +41,7 @@ def telegram_export(tmp_path):
              "from": "Vishwa", "text": "I can pick you up if needed."},
             {"id": 15, "type": "service", "date": "2023-05-23T10:14:00",
              "from": "Vishwa", "text": "should be skipped"},
-            {"id": 15, "type": "message", "date": "2023-05-23T10:14:00",
+            {"id": 16, "type": "message", "date": "2023-05-23T10:14:00",
              "from": "Vishwa", "text": ""},
         ]
     }
@@ -55,9 +55,10 @@ def test_full_ingest_to_profile_pipeline(tmp_path, telegram_export):
     user_messages = pipeline.ingest_user_messages(telegram_export)
     assert len(user_messages) == 10
     assert all(m.sender == "Vishwa" for m in user_messages)
+    assert user_messages[0].platform.name == "TELEGRAM"
     builder = PersonalityBuilder()
     updater = ProfileUpdater(profile_path=tmp_path / "profile.json", builder=builder)
     profile = updater.update(new_messages=user_messages, existing_messages=[])
     assert (tmp_path / "profile.json").exists()
     assert profile.avg_sentence_length > 0
-    assert "how are" in profile.top_phrases or len(profile.top_phrases) > 0
+    assert "how are" in profile.top_phrases
