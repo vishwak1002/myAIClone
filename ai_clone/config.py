@@ -19,22 +19,27 @@ class Config:
     vad_aggressiveness: int = 2
 
     @classmethod
-    def load(cls, path: Path = Path("config.yml")) -> Config:
+    def load(cls, path: Path | None = None) -> "Config":
+        if path is None:
+            path = Path("config.yml")
         if not path.exists():
             return cls()
         with open(path) as f:
             data = yaml.safe_load(f) or {}
         field_names = {f.name for f in fields(cls)}
         filtered = {k: v for k, v in data.items() if k in field_names}
-        for key in ("db_path", "chroma_path", "profile_path"):
-            if key in filtered:
+        path_fields = {f.name for f in fields(cls) if "Path" in str(f.type)}
+        for key in path_fields:
+            if key in filtered and filtered[key] is not None:
                 filtered[key] = Path(filtered[key])
         return cls(**filtered)
 
-    def save(self, path: Path = Path("config.yml")) -> None:
+    def save(self, path: Path | None = None) -> None:
+        if path is None:
+            path = Path("config.yml")
         data = {
-            k: str(v) if isinstance(v, Path) else v
-            for k, v in self.__dict__.items()
+            f.name: str(getattr(self, f.name)) if isinstance(getattr(self, f.name), Path) else getattr(self, f.name)
+            for f in fields(self)
         }
         with open(path, "w") as f:
             yaml.dump(data, f, default_flow_style=False)
