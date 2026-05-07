@@ -25,7 +25,7 @@ def test_embed_calls_model_encode(mock_model):
     _, model_instance = mock_model
     embedder = SentenceTransformerEmbedder(model_name="all-MiniLM-L6-v2")
     embedder.embed(["test"])
-    model_instance.encode.assert_called_once()
+    model_instance.encode.assert_called_once_with(["test"], convert_to_numpy=True)
 
 
 def test_embed_empty_list_returns_empty(mock_model):

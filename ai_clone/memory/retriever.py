@@ -23,6 +23,8 @@ class MemoryRetriever:
         conversation_store: ConversationStore,
         recency_half_life_days: float = _DEFAULT_HALF_LIFE_DAYS,
     ) -> None:
+        if recency_half_life_days <= 0:
+            raise ValueError("recency_half_life_days must be > 0")
         self._store = conversation_store
         self._half_life_days = recency_half_life_days
 

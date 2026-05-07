@@ -50,7 +50,6 @@ class MemoryConsolidator:
         texts = [r.document.text for r in old_results]
         summary = self._summarise(texts)
         ids = [r.document.id for r in old_results]
-        self._store.delete(ids)
 
         self._store.add_message(
             text=summary,
@@ -58,6 +57,7 @@ class MemoryConsolidator:
             session_id=_SUMMARY_SESSION,
             timestamp=datetime.now(tz=timezone.utc),
         )
+        self._store.delete(ids)
         return len(ids)
 
     def _summarise(self, texts: List[str]) -> str:

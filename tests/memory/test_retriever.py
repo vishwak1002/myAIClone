@@ -64,3 +64,11 @@ def test_retrieve_delegates_to_conversation_store(fake_store):
     retriever = MemoryRetriever(conversation_store=fake_store)
     retriever.retrieve("hello", top_k=5)
     fake_store.search.assert_called_once_with("hello", top_k=5)
+
+
+def test_retriever_rejects_invalid_half_life():
+    store = MagicMock()
+    with pytest.raises(ValueError, match="must be > 0"):
+        MemoryRetriever(conversation_store=store, recency_half_life_days=0)
+    with pytest.raises(ValueError, match="must be > 0"):
+        MemoryRetriever(conversation_store=store, recency_half_life_days=-5)

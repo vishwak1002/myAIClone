@@ -6,6 +6,7 @@ from ai_clone.memory.conversation_store import ConversationStore
 from ai_clone.memory.models import MemoryDocument, SearchResult
 
 
+
 @pytest.fixture
 def fake_store():
     store = MagicMock()
@@ -79,3 +80,11 @@ def test_delete_delegates_to_store(fake_store, fake_embedder):
     cs = ConversationStore(vector_store=fake_store, embedder=fake_embedder)
     cs.delete(["id-1", "id-2"])
     fake_store.delete.assert_called_once_with(["id-1", "id-2"])
+
+
+def test_add_message_raises_on_empty_embedding(fake_store):
+    embedder = MagicMock()
+    embedder.embed.return_value = []  # empty — broken embedder
+    cs = ConversationStore(vector_store=fake_store, embedder=embedder)
+    with pytest.raises(ValueError, match="no vectors"):
+        cs.add_message("hello", "user", "s1", datetime(2024, 1, 1))

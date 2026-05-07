@@ -23,6 +23,12 @@ class ConversationStore:
         self._store = vector_store
         self._embedder = embedder
 
+    def _embed_one(self, text: str) -> List[float]:
+        vectors = self._embedder.embed([text])
+        if not vectors:
+            raise ValueError("Embedding provider returned no vectors for single-text embed request")
+        return vectors[0]
+
     def add_message(
         self,
         text: str,
@@ -31,7 +37,7 @@ class ConversationStore:
         timestamp: datetime,
     ) -> MemoryDocument:
         """Embed and persist a single message. Returns the stored document."""
-        embedding = self._embedder.embed([text])[0]
+        embedding = self._embed_one(text)
         doc = MemoryDocument(
             id=str(uuid.uuid4()),
             text=text,
@@ -50,7 +56,7 @@ class ConversationStore:
         session_id: Optional[str] = None,
     ) -> List[SearchResult]:
         """Embed the query and return top-K semantically similar stored messages."""
-        embedding = self._embedder.embed([query])[0]
+        embedding = self._embed_one(query)
         filters = {"session_id": session_id} if session_id else None
         return self._store.search(
             query_embedding=embedding, top_k=top_k, filters=filters

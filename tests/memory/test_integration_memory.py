@@ -56,14 +56,17 @@ def test_store_and_retrieve_messages(fake_embedder, fake_vector_store):
 
 
 def test_retriever_reranks_by_recency(fake_embedder, fake_vector_store):
-    vector_store, stored = fake_vector_store
+    vector_store, _ = fake_vector_store
     cs = ConversationStore(vector_store=vector_store, embedder=fake_embedder)
     retriever = MemoryRetriever(conversation_store=cs, recency_half_life_days=1)
 
-    cs.add_message("recent message", "user", "s1", datetime.now() - timedelta(hours=1))
+    # Insert old first — fake store gives it score 0.9 (highest)
+    # After recency decay over 365 days, it should drop below the recent message
     cs.add_message("old message", "user", "s1", datetime.now() - timedelta(days=365))
+    cs.add_message("recent message", "user", "s1", datetime.now() - timedelta(hours=1))
 
     results = retriever.retrieve("some query", top_k=2)
     assert len(results) == 2
-    # With half_life of 1 day, the old message score is near zero — recent should rank first
-    assert results[0].score >= results[1].score
+    assert results[0].document.text == "recent message", (
+        "Expected recency weighting to promote the recent document above the old one"
+    )

@@ -38,9 +38,13 @@ class ChromaVectorStore(VectorStore):
         top_k: int,
         filters: Optional[Dict] = None,
     ) -> List[SearchResult]:
+        actual_n = min(top_k, self._collection.count())
+        if actual_n == 0:
+            return []
+
         kwargs: dict = {
             "query_embeddings": [query_embedding],
-            "n_results": top_k,
+            "n_results": actual_n,
             "include": ["documents", "embeddings", "metadatas", "distances"],
         }
         if filters:
