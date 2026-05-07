@@ -73,3 +73,9 @@ def test_count_delegates_to_store(fake_store, fake_embedder):
     fake_store.count.return_value = 17
     cs = ConversationStore(vector_store=fake_store, embedder=fake_embedder)
     assert cs.count() == 17
+
+
+def test_delete_delegates_to_store(fake_store, fake_embedder):
+    cs = ConversationStore(vector_store=fake_store, embedder=fake_embedder)
+    cs.delete(["id-1", "id-2"])
+    fake_store.delete.assert_called_once_with(["id-1", "id-2"])

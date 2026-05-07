@@ -58,3 +58,7 @@ class ConversationStore:
 
     def count(self) -> int:
         return self._store.count()
+
+    def delete(self, ids: List[str]) -> None:
+        """Delete documents by ID, delegating to the underlying VectorStore."""
+        self._store.delete(ids)
