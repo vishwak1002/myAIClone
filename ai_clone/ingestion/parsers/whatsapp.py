@@ -21,6 +21,9 @@ class WhatsAppParser(BaseParser):
 
     def parse(self, path: Path) -> List[ParsedMessage]:
         messages = []
+        # NOTE: messages are read line-by-line; multiline messages (those with
+        # embedded newlines in the export) will be silently truncated to their
+        # first line.
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 msg = self._parse_line(line.strip())
@@ -34,6 +37,12 @@ class WhatsAppParser(BaseParser):
             date_s, time_s, sender, text = m.groups()
             try:
                 ts = datetime.strptime(f"{date_s} {time_s}", "%d/%m/%Y %H:%M:%S")
+                return ParsedMessage(sender=sender.strip(), text=text.strip(),
+                                     timestamp=ts, platform=Platform.WHATSAPP)
+            except ValueError:
+                pass
+            try:
+                ts = datetime.strptime(f"{date_s} {time_s}", "%d/%m/%y %H:%M:%S")
                 return ParsedMessage(sender=sender.strip(), text=text.strip(),
                                      timestamp=ts, platform=Platform.WHATSAPP)
             except ValueError:

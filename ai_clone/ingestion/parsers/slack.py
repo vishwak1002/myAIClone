@@ -20,8 +20,6 @@ class SlackParser(BaseParser):
             for name in zf.namelist():
                 if not name.endswith(".json") or "/" not in name:
                     continue
-                if name == "users.json" or name == "channels.json":
-                    continue
                 with zf.open(name) as f:
                     day_msgs = json.load(f)
                 for msg in day_msgs:

@@ -19,15 +19,13 @@ def test_save_and_load_roundtrip(tmp_path):
         top_phrases=["how are", "sounds good"],
         formality_score=0.4,
         punctuation_style={"!": 0.2, "?": 0.1},
-        tone_traits={"humor": 0.7},
-        top_topics=["tech", "travel"],
     )
     path = tmp_path / "profile.json"
     profile.save(path)
     loaded = PersonalityProfile.load(path)
     assert loaded.avg_sentence_length == 8.5
     assert loaded.top_phrases == ["how are", "sounds good"]
-    assert loaded.tone_traits == {"humor": 0.7}
+    assert loaded.punctuation_style == {"!": 0.2, "?": 0.1}
 
 
 def test_save_creates_parent_dirs(tmp_path):

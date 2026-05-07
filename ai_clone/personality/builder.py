@@ -56,6 +56,8 @@ class PersonalityBuilder:
             informal += sum(1 for w in words if w in _INFORMAL)
         if total == 0:
             return 0.5
+        # Multiply by 10 so that even occasional informal words strongly shift
+        # the perceived formality score toward 0.
         return max(0.0, min(1.0, 1.0 - (informal / total) * 10))
 
     def _punct_style(self, texts: List[str]) -> Dict[str, float]:
