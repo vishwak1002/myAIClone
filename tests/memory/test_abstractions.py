@@ -45,6 +45,8 @@ def test_vector_store_concrete_subclass_works():
             pass
         def count(self):
             return 0
+        def get_older_than(self, cutoff, limit=100):
+            return []
 
     store = FakeStore()
     assert store.count() == 0

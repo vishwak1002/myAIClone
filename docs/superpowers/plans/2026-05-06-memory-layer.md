@@ -816,6 +816,12 @@ class ConversationStore:
 
     def count(self) -> int:
         return self._store.count()
+
+    def delete(self, ids: List[str]) -> None:
+        self._store.delete(ids)
+
+    def get_older_than(self, cutoff: datetime, limit: int = 100) -> List[MemoryDocument]:
+        return self._store.get_older_than(cutoff, limit=limit)
 ```
 
 - [ ] **Step 4: Run test to verify it passes**

@@ -27,7 +27,7 @@ def fake_vector_store():
     def upsert(docs):
         stored.extend(docs)
     def search(query_embedding, top_k, filters=None):
-        return [SearchResult(doc, 0.9 - i * 0.1) for i, doc in enumerate(stored[:top_k])]
+        return [SearchResult(document=doc, score=0.9 - i * 0.1) for i, doc in enumerate(stored[:top_k])]
     def count():
         return len(stored)
     def delete(ids):
@@ -41,7 +41,7 @@ def fake_vector_store():
 
 
 def test_store_and_retrieve_messages(fake_embedder, fake_vector_store):
-    vector_store, stored = fake_vector_store
+    vector_store, _ = fake_vector_store
     cs = ConversationStore(vector_store=vector_store, embedder=fake_embedder)
     retriever = MemoryRetriever(conversation_store=cs, recency_half_life_days=30)
 

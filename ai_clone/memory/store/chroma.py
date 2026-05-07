@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 import chromadb
@@ -63,7 +64,7 @@ class ChromaVectorStore(VectorStore):
                 id=doc_id, text=text, embedding=list(emb), metadata=meta
             )
             # ChromaDB returns cosine distance (0=identical); convert to similarity score
-            results.append(SearchResult(document=doc, score=1.0 - dist))
+            results.append(SearchResult(document=doc, score=max(0.0, 1.0 - dist)))
         return results
 
     def delete(self, ids: List[str]) -> None:
@@ -71,3 +72,23 @@ class ChromaVectorStore(VectorStore):
 
     def count(self) -> int:
         return self._collection.count()
+
+    def get_older_than(self, cutoff: datetime, limit: int = 100) -> List[MemoryDocument]:
+        from datetime import timezone
+        cutoff_unix = cutoff.astimezone(timezone.utc).timestamp()
+        count = self._collection.count()
+        if count == 0:
+            return []
+        raw = self._collection.get(
+            where={"timestamp_unix": {"$lt": cutoff_unix}},
+            limit=min(limit, count),
+            include=["documents", "embeddings", "metadatas"],
+        )
+        docs = []
+        for doc_id, text, emb, meta in zip(
+            raw["ids"], raw["documents"], raw["embeddings"], raw["metadatas"]
+        ):
+            docs.append(MemoryDocument.from_metadata(
+                id=doc_id, text=text, embedding=list(emb) if emb else [], metadata=meta
+            ))
+        return docs

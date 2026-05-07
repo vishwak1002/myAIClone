@@ -2,6 +2,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from typing import List, Optional
+
 from .embeddings.base import EmbeddingProvider
 from .models import MemoryDocument, SearchResult
 from .store.base import VectorStore
@@ -68,3 +69,6 @@ class ConversationStore:
     def delete(self, ids: List[str]) -> None:
         """Delete documents by ID, delegating to the underlying VectorStore."""
         self._store.delete(ids)
+
+    def get_older_than(self, cutoff: datetime, limit: int = 100) -> List[MemoryDocument]:
+        return self._store.get_older_than(cutoff, limit=limit)

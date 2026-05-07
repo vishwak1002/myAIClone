@@ -116,3 +116,37 @@ def test_count_returns_collection_count(mock_chroma):
     mock_collection.count.return_value = 42
     store = ChromaVectorStore(path=tmp_path)
     assert store.count() == 42
+
+
+def test_get_older_than_calls_collection_get_with_timestamp_filter(mock_chroma):
+    _, _, mock_collection, tmp_path = mock_chroma
+    mock_collection.count.return_value = 5
+    mock_collection.get.return_value = {
+        "ids": ["doc-1"],
+        "documents": ["old message"],
+        "embeddings": [[0.1, 0.2, 0.3]],
+        "metadatas": [{
+            "timestamp": "2024-01-01T00:00:00",
+            "timestamp_unix": 1704067200.0,
+            "session_id": "s1",
+            "speaker": "user",
+        }],
+    }
+    from datetime import datetime, timezone
+    store = ChromaVectorStore(path=tmp_path)
+    cutoff = datetime(2024, 6, 1, tzinfo=timezone.utc)
+    docs = store.get_older_than(cutoff, limit=10)
+    call_kwargs = mock_collection.get.call_args.kwargs
+    assert call_kwargs["where"] == {"timestamp_unix": {"$lt": cutoff.timestamp()}}
+    assert len(docs) == 1
+    assert docs[0].id == "doc-1"
+
+
+def test_get_older_than_returns_empty_when_collection_empty(mock_chroma):
+    _, _, mock_collection, tmp_path = mock_chroma
+    mock_collection.count.return_value = 0
+    from datetime import datetime, timezone
+    store = ChromaVectorStore(path=tmp_path)
+    docs = store.get_older_than(datetime(2024, 1, 1, tzinfo=timezone.utc))
+    assert docs == []
+    mock_collection.get.assert_not_called()

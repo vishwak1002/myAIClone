@@ -3,11 +3,11 @@ import pytest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 from ai_clone.memory.consolidator import MemoryConsolidator
-from ai_clone.memory.models import MemoryDocument, SearchResult
+from ai_clone.memory.models import MemoryDocument
 
 
-def _make_old_result(id: str, days_ago: int = 100) -> SearchResult:
-    doc = MemoryDocument(
+def _make_old_doc(id: str, days_ago: int = 100) -> MemoryDocument:
+    return MemoryDocument(
         id=id,
         text=f"old message {id}",
         embedding=[0.1, 0.2],
@@ -15,7 +15,6 @@ def _make_old_result(id: str, days_ago: int = 100) -> SearchResult:
         session_id="s1",
         speaker="user",
     )
-    return SearchResult(document=doc, score=0.5)
 
 
 @pytest.fixture
@@ -35,7 +34,7 @@ def fake_openrouter():
 
 
 def test_consolidate_skips_when_count_below_threshold(fake_store, fake_openrouter):
-    fake_store.count.return_value = 50  # below default threshold of 100
+    fake_store.count.return_value = 50
     consolidator = MemoryConsolidator(
         conversation_store=fake_store,
         openrouter_client=fake_openrouter,
@@ -44,11 +43,22 @@ def test_consolidate_skips_when_count_below_threshold(fake_store, fake_openroute
     deleted = consolidator.consolidate(older_than_days=60)
     assert deleted == 0
     fake_openrouter.chat.completions.create.assert_not_called()
+    fake_store.get_older_than.assert_not_called()
 
 
 def test_consolidate_fetches_old_messages_and_summarises(fake_store, fake_openrouter):
-    old_results = [_make_old_result(f"doc-{i}", days_ago=90) for i in range(5)]
-    fake_store.search.return_value = old_results
+    old_docs = [
+        MemoryDocument(
+            id=f"doc-{i}",
+            text=f"old message {i}",
+            embedding=[0.1, 0.2],
+            timestamp=datetime.now(tz=timezone.utc) - timedelta(days=90),
+            session_id="s1",
+            speaker="user",
+        )
+        for i in range(5)
+    ]
+    fake_store.get_older_than.return_value = old_docs
     fake_store.count.return_value = 200
 
     consolidator = MemoryConsolidator(
@@ -59,15 +69,15 @@ def test_consolidate_fetches_old_messages_and_summarises(fake_store, fake_openro
     deleted = consolidator.consolidate(older_than_days=60)
 
     fake_openrouter.chat.completions.create.assert_called_once()
+    fake_store.add_message.assert_called_once()
     fake_store.delete.assert_called_once()
     deleted_ids = fake_store.delete.call_args[0][0]
     assert set(deleted_ids) == {f"doc-{i}" for i in range(5)}
-    fake_store.add_message.assert_called_once()
     assert deleted == 5
 
 
 def test_consolidate_returns_zero_when_no_old_messages(fake_store, fake_openrouter):
-    fake_store.search.return_value = []
+    fake_store.get_older_than.return_value = []
     consolidator = MemoryConsolidator(
         conversation_store=fake_store,
         openrouter_client=fake_openrouter,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Dict, List, Optional
 from ..models import MemoryDocument, SearchResult
 
@@ -34,4 +35,9 @@ class VectorStore(ABC):
     @abstractmethod
     def count(self) -> int:
         """Return total number of stored documents."""
+        ...
+
+    @abstractmethod
+    def get_older_than(self, cutoff: datetime, limit: int = 100) -> List[MemoryDocument]:
+        """Return up to `limit` documents whose timestamp is older than `cutoff`."""
         ...

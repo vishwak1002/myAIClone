@@ -47,6 +47,8 @@ def test_memory_document_metadata_roundtrip():
     assert meta["timestamp"] == ts.isoformat()
     assert meta["session_id"] == "s1"
     assert meta["speaker"] == "user"
+    assert "timestamp_unix" in meta
+    assert isinstance(meta["timestamp_unix"], float)
 
     restored = MemoryDocument.from_metadata(id="doc-3", text="test", embedding=[], metadata=meta)
     assert restored.timestamp == ts

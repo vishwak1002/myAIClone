@@ -16,6 +16,7 @@ class MemoryDocument:
     def to_metadata(self) -> dict:
         return {
             "timestamp": self.timestamp.isoformat(),
+            "timestamp_unix": self.timestamp.timestamp(),
             "session_id": self.session_id,
             "speaker": self.speaker,
         }

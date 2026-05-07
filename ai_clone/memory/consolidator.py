@@ -2,7 +2,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any, List
 from .conversation_store import ConversationStore
-from .models import SearchResult
 
 _DEFAULT_THRESHOLD = 100
 _SUMMARY_SPEAKER = "summary"
@@ -37,19 +36,13 @@ class MemoryConsolidator:
             return 0
 
         cutoff = datetime.now(tz=timezone.utc) - timedelta(days=older_than_days)
-        old_results: List[SearchResult] = self._store.search(
-            "conversation history", top_k=50
-        )
-        old_results = [
-            r for r in old_results
-            if _as_utc(r.document.timestamp) < cutoff
-        ]
-        if not old_results:
+        old_docs = self._store.get_older_than(cutoff, limit=50)
+        if not old_docs:
             return 0
 
-        texts = [r.document.text for r in old_results]
+        texts = [d.text for d in old_docs]
         summary = self._summarise(texts)
-        ids = [r.document.id for r in old_results]
+        ids = [d.id for d in old_docs]
 
         self._store.add_message(
             text=summary,
@@ -78,7 +71,3 @@ class MemoryConsolidator:
         return response.choices[0].message.content
 
 
-def _as_utc(dt: datetime) -> datetime:
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt
